@@ -1,0 +1,131 @@
+<?php
+    include('common/db_connection.php');
+    $query = "SELECT vendor_id, v_name, v_category, v_phone, v_address, status FROM vendors";
+    $result = mysqli_query($conn, $query);
+    $count=0;
+    if($_SERVER['REQUEST_METHOD']==='POST'){
+        if(isset($_POST['statusToggle']))
+        {
+            $count++;
+            $vendor_id=$_POST['vendor_id'];
+            $status=$_POST['status'];
+            $setValue=($status==='1')?0:1;
+            $update_query= "UPDATE vendors set status='$setValue' where vendor_id='$vendor_id'";
+            if (mysqli_query($conn, $update_query)) {
+                echo "<script>event.preventDefault();</script>";
+                $count=0;
+            } else {
+                echo "Error updating status: " . mysqli_error($conn);
+            }
+        }
+    }
+?>
+<script src="https://cdn.tailwindcss.com"></script>
+<title>Vendor View</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styleHome.css">
+<body class="bg-gradient-to-tr from-[#21D4FD] to-[#B721FF]">
+<div class="flex flex-col gap-4">
+        <header class="mb-2">
+            <nav class="flex flex-col md:flex-row md:justify-between">
+                <button type="button" onclick="ToggleMenu();" id="menuButton" class="w-20">
+                    <img src="images/menu.png" width="60px" height="60px" alt="logo" id="hideViewToggle" class="md:hidden p-2">
+                </button>
+                <div id="menuO" class="md:block hidden ">
+                    <ul class="md:flex md:flex-row w-full bg-white md:bg-transparent text-blue-600 md:text-white text-lg font-bold flex-col w-full gap-4 md:justify-between md:block">
+                        <li class="p-2"><a href="home.php" class=" w-full border-b-2 border-blue-600 md:border-0 p-2 rounded hover:text-black hover:bg-white hover:bg-opacity-50">Home</a></li>
+                        <li class="p-2"><a href="Category.php" class="w-full border-b-2 border-blue-600 md:border-0 p-2 rounded hover:text-black hover:bg-white hover:bg-opacity-50">Category</a></li>
+                        <li class="p-2"><a href="SubCategory.php" class=" w-full border-b-2 border-blue-600 md:border-0 p-2 rounded hover:text-black hover:bg-white hover:bg-opacity-50">Sub-Category</a></li>
+                        <li class="p-2"><a href="Vendors.php" class=" w-full border-b-2 border-blue-600 md:border-0 p-2 rounded hover:text-black hover:bg-white hover:bg-opacity-50">Vendors</a></li>
+                        <li class="p-2"><a href="Product.php" class=" w-full border-b-2 border-blue-600 md:border-0 p-2 rounded hover:text-black hover:bg-white hover:bg-opacity-50">Product</a></li>
+                        <li class="p-2"><a href="products.php" class=" w-full border-b-2 border-blue-600 md:border-0 p-2 rounded hover:text-black hover:bg-white hover:bg-opacity-50">Customer</a></li>
+                        <li class="p-2"><a href="products.php" class=" w-full border-b-2 border-blue-600 md:border-0 p-2 rounded hover:text-black hover:bg-white hover:bg-opacity-50">Order</a></li>
+                        <li class="p-2"><a href="products.php" class=" w-full border-b-2 border-blue-600 md:border-0 p-2 rounded hover:text-black hover:bg-white hover:bg-opacity-50">About me</a></li>
+                    </ul>  
+                </div>         
+            </nav>  
+        </header>
+        <div class="flex flex-row justify-end ">
+                <?php
+                session_start();
+                if (isset($_SESSION['user_name'])) {
+                    echo "<p class='text-white text-lg p-2 hover:scale-x-105 transition-duration-300'>Welcome, " . htmlspecialchars($_SESSION['user_name']) . "!</p>";
+                } else {
+                    echo "<p class='text-white text-lg p-2 hover:scale-x-105 transition-duration-300'>Welcome, Guest!</p>";
+                }
+                ?>
+        </div>
+        <div class="flex flex-row justify-center gap-5 ">
+            <div class="bg-white bg-opacity-50 rounded p-3">
+                <button type="button">
+                    <img src="images\tune.png" title="Filter" style='width: 50px; height: 50px;' >
+                </button>
+                <button type="button">
+                    <img src="images\search.png" title="Search" style='width: 50px; height: 50px;'>
+                </button>
+                <button type="button">
+                    <img src="images\filter_list_off.png" title="Filter_off" style='width: 50px; height: 50px;'>
+                </button>
+            </div>
+        </div>
+        <div class="flex flex-col items-center gap-5">
+            
+        </div>
+    <div class="w-full flex flex-row justify-center p-4">
+        <?php
+            if (mysqli_num_rows($result) > 0) {
+                echo "<table class='border rounded bg-white text-blue-600'>
+                        <tr>
+                            <th class='border border-blue-400 p-2'>Vendor Name</th>
+                            <th class='border border-blue-400 p-2'>Category</th>
+                            <th class='border border-blue-400 p-2'>Phone</th>
+                            <th class='border border-blue-400 p-2'>Address</th>
+                            <th class='border border-blue-400 p-2'>Status</th>
+                        </tr>";
+                while ($row = mysqli_fetch_assoc($result)) {
+                    $vendor_category_query="SELECT c_name FROM categories WHERE category_id= '{$row['v_category']}'";
+                    $vendor_category_result= mysqli_query($conn, $vendor_category_query);
+                    $vendor_category_row = mysqli_fetch_assoc($vendor_category_result);
+                    if($row['status']==1)
+                    {
+                        $statusImage="active.png";
+                    }
+                    else{
+                        $statusImage= "inactive.png";
+                    }
+                    // $statusImage = ($row['status'] == 1) ? 'images/active.png' : 'images/inactive.png';
+                    echo "<tr>
+                            <td class='border border-blue-400 p-2'>{$row['v_name']}</td>
+                            <td class='border border-blue-400 p-2'>{$vendor_category_row['c_name']}</td>
+                            <td class='border border-blue-400 p-2'>{$row['v_phone']}</td>
+                            <td class='border border-blue-400 p-2'>
+                                <span class='hidden md:inline'>{$row['v_address']}</span>
+                                <span class='md:hidden'>" . substr($row['v_address'], 0, 20) . "...</span>
+                            </td>
+                            <td class='border border-blue-400 p-2'>
+                            <form method='POST' action=''>
+                                <input type='hidden' name='vendor_id' value='".$row['vendor_id']."'>
+                                <input type='hidden' name='status' value='".$row['status']."'>
+                                <button type='submit' name='statusToggle'>
+                                    <img src='images/{$statusImage}' alt='status' style='width: 50px; height: 50px;'>
+                                </button>
+                                </form>
+                            </td>
+                            
+                        </tr>";
+                }
+                echo "</table>";
+            } 
+            else {
+                echo "No vendors found.";
+            }
+        ?>
+    </div>
+</div>   
+</body>
+
+<?php 
+    mysqli_close($conn);
+?>
